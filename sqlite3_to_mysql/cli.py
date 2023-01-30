@@ -37,6 +37,9 @@ from .mysql_utils import (
     "-X", "--without-foreign-keys", is_flag=True, help="Do not transfer foreign keys."
 )
 @click.option(
+    "--ignore-create-tables", is_flag=True, help="Do not create tables"
+)
+@click.option(
     "-W",
     "--ignore-duplicate-keys",
     is_flag=True,
@@ -138,6 +141,7 @@ def cli(
     sqlite_tables,
     without_foreign_keys,
     ignore_duplicate_keys,
+    ignore_create_tables,
     mysql_user,
     prompt_mysql_password,
     mysql_password,
@@ -195,6 +199,7 @@ def cli(
             mysql_charset=mysql_charset.lower() if mysql_charset else "utf8mb4",
             mysql_collation=mysql_collation.lower() if mysql_collation else None,
             ignore_duplicate_keys=ignore_duplicate_keys,
+            ignore_create_tables=ignore_create_tables,
             use_fulltext=use_fulltext,
             with_rowid=with_rowid,
             chunk=chunk,

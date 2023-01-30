@@ -135,6 +135,7 @@ class SQLite3toMySQL:
             self._mysql_collation = "utf8mb4_general_ci"
 
         self.ignore_duplicate_keys = kwargs.get("ignore_duplicate_keys") or False
+        self.ignore_create_tables = kwargs.get("ignore_create_tables") or False
 
         self._use_fulltext = kwargs.get("use_fulltext") or False
 
@@ -518,6 +519,8 @@ class SQLite3toMySQL:
         index_infos,
         index_iteration=0,
     ):
+        self._logger.info("Exiting...")
+        return
         sql = """
             ALTER TABLE `{table}`
             ADD {index_type} `{name}`({columns})
@@ -628,8 +631,8 @@ class SQLite3toMySQL:
                     safe_identifier_length(foreign_key["table"]),
                     safe_identifier_length(foreign_key["to"]),
                 )
-                self._mysql_cur.execute(sql)
-                self._mysql.commit()
+                #self._mysql_cur.execute(sql)
+                #self._mysql.commit()
             except mysql.connector.Error as err:
                 self._logger.error(
                     "MySQL failed adding foreign key to %s.%s referencing %s.%s: %s",
@@ -703,7 +706,10 @@ class SQLite3toMySQL:
                 )
 
                 # create the table
-                self._create_table(table["name"], transfer_rowid=transfer_rowid)
+                if self.ignore_create_tables == False:
+                    self._create_table(table["name"], transfer_rowid=transfer_rowid)
+                else:
+                    self._logger.info("Avoiding creating tables and index")
 
                 # truncate the table on request
                 if self._mysql_truncate_tables:
@@ -779,7 +785,10 @@ class SQLite3toMySQL:
                         raise
 
                 # add indices
-                self._add_indices(table["name"])
+                if self.ignore_create_tables == False:
+                    self._add_indices(table["name"])
+                else:
+                    self._logger.info("avoiding creating indexes on tables")
 
                 # add foreign keys
                 if not self._without_foreign_keys:
